@@ -1,4 +1,3 @@
-use core::f32;
 use image::{buffer::Pixels, imageops::FilterType};
 use image::Luma;
 use image::{DynamicImage, GenericImageView, ImageBuffer};
