@@ -1,13 +1,24 @@
 {
-  description = "A very basic flake";
-  
-  outputs = { self, nixpkgs }:
-    let pkgs = nixpkgs.legacyPackages.x86_64-linux; in
-    {
+  description = "Ascii-generator flake";
 
-      devShell.x86_64-linux = pkgs.mkShell {
-        nativeBuildInputs = with pkgs; [ cargo rustc rustfmt rust-analyzer ];
-      };
+  inputs = {
+    utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs";
+  };
 
-    };
+  outputs = { self, nixpkgs, utils, ... }:
+    utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      rec {
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            cargo
+            rustc
+            rustfmt
+            rust-analyzer
+          ];
+        };
+      });
 }
