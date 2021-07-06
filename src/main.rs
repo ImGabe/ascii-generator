@@ -1,12 +1,31 @@
-use image::{buffer::Pixels, imageops::FilterType};
 use image::Luma;
+use image::{buffer::Pixels, imageops::FilterType};
 use image::{DynamicImage, GenericImageView, ImageBuffer};
 use std::{fs::File, io::Write, path::Path};
 
-// TO-DO: transform into variables for the user
-const PATH: &str = "assets/433.png";
-const BRIGHT: i32 = 100;
-const SIZE: usize = 256;
+use std::path::PathBuf;
+use structopt::StructOpt;
+
+/// Transform images to ASCII
+#[derive(StructOpt, Debug)]
+#[structopt(name = "Ascii-generator")]
+struct Opt {
+    /// Output file
+    #[structopt(short, long, parse(from_os_str))]
+    output: Option<PathBuf>,
+
+    /// Output size
+    #[structopt(short, long)]
+    size: usize,
+
+    /// Output right
+    #[structopt(short, long, default_value = "0")]
+    bright: i32,
+
+    /// File to process
+    #[structopt(name = "FILE", parse(from_os_str))]
+    file: PathBuf,
+}
 
 const ASCII_CHARS: [char; 69] = [
     '$', '@', 'B', '%', '8', '&', 'W', 'M', '#', '*', 'o', 'a', 'h', 'k', 'b', 'd', 'p', 'q', 'w',
@@ -15,17 +34,18 @@ const ASCII_CHARS: [char; 69] = [
     '!', 'l', 'I', ';', ':', ',', '"', '^', '`', '\'', '.', ' ',
 ];
 
-fn open_image(path: &str) -> DynamicImage {
-    image::open(Path::new(path)).expect("Not a valid image path or could no open image")
+fn open_image(path: PathBuf) -> DynamicImage {
+    image::open(Path::new(&path)).expect("Not a valid image path or could no open image")
 }
 
-fn modify_image(image: DynamicImage) -> ImageBuffer<Luma<u8>, Vec<u8>> {
+fn modify_image(image: DynamicImage, size: usize, bright: i32) -> ImageBuffer<Luma<u8>, Vec<u8>> {
     let (width, height) = image.dimensions();
     let ratio = height as f32 / width as f32;
-    let new_width = SIZE as f32;
+    let new_width = size as f32;
     let new_height = ratio * new_width;
 
-    image.brighten(BRIGHT)
+    image
+        .brighten(bright)
         .resize_exact(new_width as u32, new_height as u32, FilterType::Nearest)
         .to_luma8()
 }
@@ -35,27 +55,32 @@ fn pixel_to_ascii(pixel: Luma<u8>) -> char {
     ASCII_CHARS[level_of_bright]
 }
 
-fn pixels_to_ascii(pixels: Pixels<Luma<u8>>) -> String {
+fn pixels_to_ascii(pixels: Pixels<Luma<u8>>, size: usize) -> String {
     let ascii: Vec<char> = pixels.map(|p| pixel_to_ascii(*p)).collect();
     let ascii_vec: Vec<String> = ascii
-        .chunks(SIZE)
+        .chunks(size)
         .map(|line| line.iter().cloned().collect::<String>())
         .collect();
 
     ascii_vec.join("\n")
 }
 
-fn to_file(buffer: &[u8]) {
-    let mut file = File::create("ascii_art.txt").expect("Can't create file.");
+fn to_file(buffer: &[u8], output: PathBuf) {
+    let mut file = File::create(output).expect("Can't create file.");
     file.write_all(buffer).expect("Can't write file.");
 }
 
 fn main() {
-    let img = open_image(PATH);
-    let imgbuf = modify_image(img);
-    let pixels = imgbuf.pixels();
-    let ascii_art = pixels_to_ascii(pixels);
+    let opt = Opt::from_args();
 
-    to_file(ascii_art.as_bytes());
+    let img = open_image(opt.file);
+    let imgbuf = modify_image(img, opt.size, opt.bright);
+    let pixels = imgbuf.pixels();
+    let ascii_art = pixels_to_ascii(pixels, opt.size);
+
+    if let Some(output) = &opt.output {
+        to_file(ascii_art.as_bytes(), output.to_path_buf());
+    }
+
     println!("{}", ascii_art);
 }
