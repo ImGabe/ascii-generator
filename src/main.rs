@@ -14,6 +14,10 @@ struct Opt {
     #[structopt(short, long, parse(from_os_str))]
     output: Option<PathBuf>,
 
+    /// Invert color file
+    #[structopt(short, long)]
+    invert: bool,
+
     /// Output size
     #[structopt(short, long)]
     size: usize,
@@ -50,13 +54,19 @@ fn modify_image(image: DynamicImage, size: usize, bright: i32) -> ImageBuffer<Lu
         .to_luma8()
 }
 
-fn pixel_to_ascii(pixel: Luma<u8>) -> char {
-    let level_of_bright = (pixel[0] as usize) * (ASCII_CHARS.len() - 1) / 255;
-    ASCII_CHARS[level_of_bright]
+fn pixel_to_ascii(pixel: Luma<u8>, invert: bool) -> char {
+    let ascii_chars_length = ASCII_CHARS.len();
+    let level_of_bright = (pixel[0] as usize) * (ascii_chars_length - 1) / 255;
+
+    if invert {
+        ASCII_CHARS[ascii_chars_length - level_of_bright]
+    } else {
+        ASCII_CHARS[level_of_bright]
+    }    
 }
 
-fn pixels_to_ascii(pixels: Pixels<Luma<u8>>, size: usize) -> String {
-    let ascii: Vec<char> = pixels.map(|p| pixel_to_ascii(*p)).collect();
+fn pixels_to_ascii(pixels: Pixels<Luma<u8>>, size: usize, invert: bool) -> String {
+    let ascii: Vec<char> = pixels.map(|p| pixel_to_ascii(*p, invert)).collect();
     let ascii_vec: Vec<String> = ascii
         .chunks(size)
         .map(|line| line.iter().cloned().collect::<String>())
@@ -76,7 +86,7 @@ fn main() {
     let img = open_image(opt.file);
     let imgbuf = modify_image(img, opt.size, opt.bright);
     let pixels = imgbuf.pixels();
-    let ascii_art = pixels_to_ascii(pixels, opt.size);
+    let ascii_art = pixels_to_ascii(pixels, opt.size, opt.invert);
 
     if let Some(output) = &opt.output {
         to_file(ascii_art.as_bytes(), output.to_path_buf());
