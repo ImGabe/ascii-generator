@@ -1,35 +1,3 @@
-# ascii-generator
-
-> Transform images to ASCII
-
-## Usage
-
-```
-Ascii-generator 0.1.0
-Transform images to ASCII
-
-USAGE:
-    ascii-generator [FLAGS] [OPTIONS] <FILE> --size <size>
-
-FLAGS:
-    -h, --help       Prints help information
-    -i, --invert     Invert file
-    -V, --version    Prints version information
-
-OPTIONS:
-    -b, --bright <bright>    Output right [default: 0]
-    -o, --output <output>    Output file
-    -s, --size <size>        Output size
-
-ARGS:
-    <FILE>    File to process
-```
-
-## Example
-
-```
-$ ./ascii-generator -o ./example/image.txt -s 64 -i ./example/image.jpg
-
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -72,4 +40,3 @@ iiiiiiiiiiiiiiiii^``````````````^":l>+?{/xXLmb*illl!!iiiiiiii>i>
 iiiiiiiiii>>>>>>"^``````````````^^,Ii~-}(jvJOdo{ill!!iiii>>>>>>>
 ii>>i>>>>>>>>>>>^^````````'``````^";!<_])tnYQqa#>!l!!ii>>>>>>>>>
 >>>>>>>>>>>>>>>,^^```````'''`````^":l>+?{/xzLwk*>i!!ii>>>>>>>>>>
-```
